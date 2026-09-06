@@ -1,6 +1,5 @@
-from router import ModelRouter
-from schemas import ModelInfo
-
+from ai.router import ModelRouter
+from ai.schemas import ModelInfo
 
 def test_router_selects_matching_capability():
     router = ModelRouter()

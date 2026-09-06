@@ -1,7 +1,6 @@
 from typing import Iterable
 
-from schemas import ModelInfo
-
+from ai.schemas import ModelInfo
 
 class ModelRegistry:
     """Stores metadata about available AI models."""

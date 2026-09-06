@@ -1,6 +1,5 @@
-from registry import ModelRegistry
-from schemas import ModelInfo
-
+from ai.registry import ModelRegistry
+from ai.schemas import ModelInfo
 
 def test_register_and_get_model():
     registry = ModelRegistry()
