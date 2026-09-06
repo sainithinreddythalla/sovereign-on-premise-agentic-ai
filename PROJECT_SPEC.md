@@ -148,3 +148,60 @@ Before making code changes, every team member must:
 6. Communicate proposed architecture changes before implementing them
 
 PROJECT_SPEC.md will act as the single source of truth for the project.
+## 10. Module Ownership
+
+### Module 1 — AI/LLM + Model Router
+Responsible for:
+- Open-weight model integration
+- Model abstraction
+- Model routing
+- Text generation
+- Vision model integration where applicable
+
+### Module 2 — RAG + Multimodal
+Responsible for:
+- PDF/document ingestion
+- OCR
+- Embeddings
+- Vector search
+- Document retrieval
+- Source/page references
+- Image and scanned document processing
+
+### Module 3 — Agent + Industrial Workflow
+Responsible for:
+- Task planning
+- Multi-step execution
+- Tool calling
+- Industrial audit workflow
+- Verification orchestration
+- Deliverable workflow
+
+### Module 4 — Backend/API
+Responsible for:
+- FastAPI application
+- REST APIs
+- Authentication
+- Request handling
+- Database interaction
+- Connecting frontend with AI modules
+
+### Module 5 — Frontend/UI
+Responsible for:
+- React application
+- Dashboard
+- Document upload
+- AI workspace
+- Processing status
+- Findings/evidence display
+- Report download
+
+### Module 6 — Testing + Integration
+Responsible for:
+- Integration testing
+- API testing
+- End-to-end testing
+- Test datasets
+- Bug tracking
+- Compatibility between modules
+- Final demo validation
