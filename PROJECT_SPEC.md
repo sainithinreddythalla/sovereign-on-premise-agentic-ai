@@ -205,3 +205,171 @@ Responsible for:
 - Bug tracking
 - Compatibility between modules
 - Final demo validation
+- ## 11. API Contracts
+
+All modules must communicate through stable interfaces.
+Internal implementation can change, but shared request/response formats must remain compatible.
+
+### 11.1 Document Upload
+
+POST /api/documents/upload
+
+Request:
+- multipart/form-data
+- file
+
+Response:
+
+{
+  "document_id": "doc_001",
+  "filename": "Safety_Manual.pdf",
+  "status": "processing"
+}
+
+---
+
+### 11.2 Document Status
+
+GET /api/documents/{document_id}
+
+Response:
+
+{
+  "document_id": "doc_001",
+  "filename": "Safety_Manual.pdf",
+  "status": "completed"
+}
+
+Possible statuses:
+- uploaded
+- processing
+- completed
+- failed
+
+---
+
+### 11.3 Chat / Task Request
+
+POST /api/tasks
+
+Request:
+
+{
+  "message": "Audit this equipment against the safety standard.",
+  "document_ids": ["doc_001", "doc_002"]
+}
+
+Response:
+
+{
+  "task_id": "task_001",
+  "status": "queued"
+}
+
+---
+
+### 11.4 Task Status
+
+GET /api/tasks/{task_id}
+
+Response:
+
+{
+  "task_id": "task_001",
+  "status": "completed",
+  "answer": "Three potential deviations were identified.",
+  "confidence": 0.92,
+  "sources": [
+    {
+      "document_id": "doc_001",
+      "filename": "Safety_Manual.pdf",
+      "page": 17,
+      "reference": "Relevant safety requirement..."
+    }
+  ],
+  "findings": [],
+  "report_id": "report_001"
+}
+
+Possible statuses:
+- queued
+- planning
+- retrieving
+- analyzing
+- verifying
+- generating
+- completed
+- failed
+
+---
+
+### 11.5 RAG Search
+
+POST /api/rag/search
+
+Request:
+
+{
+  "query": "Applicable safety requirements",
+  "document_ids": ["doc_001"],
+  "top_k": 5
+}
+
+Response:
+
+{
+  "results": [
+    {
+      "document_id": "doc_001",
+      "filename": "Safety_Manual.pdf",
+      "page": 17,
+      "text": "Relevant document content...",
+      "score": 0.91
+    }
+  ]
+}
+
+---
+
+### 11.6 AI Model Request
+
+POST /api/ai/generate
+
+Request:
+
+{
+  "task_type": "reasoning",
+  "prompt": "Analyze the retrieved evidence.",
+  "context": []
+}
+
+Response:
+
+{
+  "model": "selected-model",
+  "answer": "...",
+  "confidence": 0.90
+}
+
+The model router may internally select the most appropriate available model.
+
+---
+
+### 11.7 Report Generation
+
+POST /api/reports/generate
+
+Request:
+
+{
+  "task_id": "task_001",
+  "format": "docx"
+}
+
+Response:
+
+{
+  "report_id": "report_001",
+  "status": "generated",
+  "filename": "industrial_audit_report.docx"
+}
