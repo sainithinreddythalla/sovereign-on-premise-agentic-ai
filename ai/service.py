@@ -1,10 +1,7 @@
 from typing import Protocol
-
-from config import AIConfig
-from router import ModelRouter
-from schemas import GenerationRequest, GenerationResponse, ModelInfo
-
-
+from ai.config import AIConfig
+from ai.router import ModelRouter
+from ai.schemas import GenerationRequest, GenerationResponse, ModelInfo
 class AIProvider(Protocol):
     """Interface that every AI model provider must implement."""
 

@@ -1,8 +1,7 @@
-from config import AIConfig
-from router import ModelRouter
-from schemas import GenerationRequest, ModelInfo
-from service import AIService
-
+from ai.config import AIConfig
+from ai.router import ModelRouter
+from ai.schemas import GenerationRequest, ModelInfo
+from ai.service import AIService
 
 class FakeProvider:
     def generate(self, model, prompt, context, config):

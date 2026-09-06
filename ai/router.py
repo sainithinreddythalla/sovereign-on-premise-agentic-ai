@@ -1,5 +1,4 @@
-from schemas import ModelInfo, TaskType
-
+from ai.schemas import ModelInfo, TaskType
 
 class ModelRouter:
     """Selects the most suitable model for a requested task."""
