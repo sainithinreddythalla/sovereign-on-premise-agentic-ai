@@ -1,7 +1,8 @@
 """API contract endpoints for RAG, AI generation, and report generation."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
+from backend.errors import APIError
 from backend.schemas.contracts import (
     AIGenerateRequest,
     AIGenerateResponse,
@@ -14,33 +15,74 @@ from backend.schemas.contracts import (
 router = APIRouter(tags=["contracts"])
 
 
+def _get_rag_search():
+    """Load the RAG service boundary lazily."""
+    from rag.src.service import search
+
+    return search
+
+
 @router.post("/rag/search", response_model=RAGSearchResponse)
 def rag_search(request: RAGSearchRequest) -> RAGSearchResponse:
-    # RAG implementation is owned by the RAG team.
-    return RAGSearchResponse(results=[])
+    """Delegate RAG search to the RAG service boundary."""
+    try:
+        result = _get_rag_search()(request)
+        return RAGSearchResponse.model_validate(result)
+    except Exception as exc:
+        raise APIError(
+            status_code=503,
+            code="RAG_SERVICE_UNAVAILABLE",
+            message="RAG service is not currently available.",
+            details=str(exc),
+        ) from exc
 
 
 @router.post("/ai/generate", response_model=AIGenerateResponse)
 def ai_generate(request: AIGenerateRequest) -> AIGenerateResponse:
-    # AI provider integration is owned by the AI team.
-    raise HTTPException(
-        status_code=503,
-        detail={
-            "code": "AI_SERVICE_UNAVAILABLE",
-            "message": "AI service is not currently available.",
-        },
-    )
+    """Delegate generation to the AI service boundary."""
+    try:
+        from ai.entrypoint import generate
+        from ai.schemas import GenerationRequest
+
+        ai_request = GenerationRequest(
+            prompt=request.prompt,
+            task_type=request.task_type,
+            context=request.context,
+        )
+
+        result = generate(ai_request)
+
+        return AIGenerateResponse(
+            model=result.model,
+            answer=result.answer,
+            verification_status=result.verification_status,
+        )
+    except RuntimeError as exc:
+        raise APIError(
+            status_code=503,
+            code="AI_SERVICE_UNAVAILABLE",
+            message="AI service is not currently available.",
+            details=str(exc),
+        ) from exc
+    except Exception as exc:
+        raise APIError(
+            status_code=503,
+            code="AI_SERVICE_UNAVAILABLE",
+            message="AI service failed to generate a response.",
+            details=str(exc),
+        ) from exc
 
 
-@router.post("/reports/generate", response_model=ReportGenerateResponse)
+@router.post(
+    "/reports/generate",
+    response_model=ReportGenerateResponse,
+)
 def generate_report(
     request: ReportGenerateRequest,
 ) -> ReportGenerateResponse:
-    # Report generation implementation is not yet available.
-    raise HTTPException(
+    """Report generation is unavailable until a report service exists."""
+    raise APIError(
         status_code=503,
-        detail={
-            "code": "REPORT_SERVICE_UNAVAILABLE",
-            "message": "Report generation service is not currently available.",
-        },
+        code="REPORT_SERVICE_UNAVAILABLE",
+        message="Report generation service is not currently available.",
     )
