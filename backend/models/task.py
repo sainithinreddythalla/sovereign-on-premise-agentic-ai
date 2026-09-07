@@ -50,6 +50,8 @@ class Task(Base):
     verification_status = Column(String(64), nullable=True)
     evidence_coverage = Column(Float, nullable=True)
     requires_human_review = Column(Integer, nullable=True)
+    sources = Column(Text, nullable=False, default="[]")
+    findings = Column(Text, nullable=False, default="[]")
     report_id = Column(String(64), nullable=True)
 
     created_at = Column(
