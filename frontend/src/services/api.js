@@ -10,7 +10,8 @@ import {
   INITIAL_DELIVERABLES
 } from "./mockData";
 
-const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
 // Local in-memory state for simulator mode
 let localDocuments = [...INITIAL_DOCUMENTS];
@@ -19,18 +20,27 @@ let isSimulatorMode = true; // Auto-checked on initialization
 
 export const checkBackendHealth = async () => {
   try {
-    const res = await fetch(`${API_BASE_URL}/health`, {
-      method: "GET",
-      signal: AbortSignal.timeout(1500)
-    });
-    if (res.ok) {
-      isSimulatorMode = false;
-      return { online: true, mode: "Live Backend" };
-    }
-  } catch {
+    const res = await fetch(`${API_BASE_URL}/health`);
+
+    if (!res.ok) throw new Error("Backend unavailable");
+
+    const data = await res.json();
+
+    isSimulatorMode = false;
+
+    return {
+      online: true,
+      mode: "Live Backend",
+      data
+    };
+  } catch (err) {
     isSimulatorMode = true;
+
+    return {
+      online: false,
+      mode: "Sovereign Local Simulator"
+    };
   }
-  return { online: false, mode: "Sovereign Local Simulator" };
 };
 
 export const getSimulatorMode = () => isSimulatorMode;
