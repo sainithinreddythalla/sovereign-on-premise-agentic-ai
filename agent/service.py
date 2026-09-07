@@ -33,6 +33,11 @@ from .schemas import (
     VerificationReport,
     VerificationStatus,
 )
+from .verification import (
+    EvidenceVerifier,
+    verify_finding,
+    verify_findings,
+)
 
 
 # ============================================================================
@@ -123,63 +128,12 @@ class DefaultReportClient:
         )
 
 
-class DefaultVerifier:
+class DefaultVerifier(EvidenceVerifier):
     """
     Default verification engine implementing Section 15 of PROJECT_SPEC.md.
-    Evaluates grounding, evidence presence, and human review requirements.
+    Backed by Phase 3 EvidenceVerifier and verify_findings.
     """
-    def verify(
-        self,
-        task_id: str,
-        findings: List[AuditFinding],
-        sources: List[SourceReference],
-    ) -> VerificationReport:
-        total = len(findings)
-        if total == 0:
-            return VerificationReport(
-                task_id=task_id,
-                total_findings=0,
-                verified_findings_count=0,
-                evidence_coverage=1.0 if sources else 0.0,
-                requires_human_review=True,
-                verification_status=VerificationStatus.REQUIRES_REVIEW,
-                notes=["No candidate audit findings generated for evaluation."],
-            )
-
-        known_docs = {s.document_id for s in sources} | {s.filename for s in sources}
-        verified_count = 0
-        notes: List[str] = []
-
-        for finding in findings:
-            has_req = bool(finding.requirement_evidence and finding.requirement_evidence.strip())
-            has_obs = bool(finding.observed_evidence and finding.observed_evidence.strip())
-            source_grounded = bool(finding.source and (finding.source in known_docs or len(known_docs) == 0))
-
-            if has_req and has_obs and source_grounded:
-                verified_count += 1
-                finding.verification_status = VerificationStatus.VERIFIED_WITH_EVIDENCE
-            else:
-                finding.verification_status = VerificationStatus.REQUIRES_REVIEW
-                notes.append(f"Finding '{finding.finding}' lacks complete verified evidence grounding.")
-
-        coverage = round(verified_count / total, 2)
-
-        if coverage >= 0.8:
-            status = VerificationStatus.VERIFIED_WITH_EVIDENCE
-        elif coverage < 0.5:
-            status = VerificationStatus.VERIFICATION_INCOMPLETE
-        else:
-            status = VerificationStatus.REQUIRES_REVIEW
-
-        return VerificationReport(
-            task_id=task_id,
-            total_findings=total,
-            verified_findings_count=verified_count,
-            evidence_coverage=coverage,
-            requires_human_review=True,  # Industrial audit findings require human review (Section 7 & 15)
-            verification_status=status,
-            notes=notes,
-        )
+    pass
 
 
 # ============================================================================
