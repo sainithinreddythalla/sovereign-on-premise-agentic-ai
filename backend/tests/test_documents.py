@@ -8,7 +8,8 @@ Verifies:
 5. Non-existent document ID returns HTTP 404 with standardized error
 6. Document list endpoint returns collection of stored documents
 7. Uploaded file is genuinely stored in controlled local filesystem
-8. Path traversal attempts are blocked and cannot escape the upload directory
+8. Supported uploaded documents reach a terminal processing status
+9. Path traversal attempts are blocked and cannot escape the upload directory
 """
 
 import io
@@ -112,7 +113,7 @@ def test_uploaded_file_is_actually_stored_on_disk(test_env):
 
 
 def test_get_document_status_returns_metadata(test_env):
-    """Verify GET /api/documents/{id} returns status per Section 11.2."""
+    """Verify GET /api/documents/{id} returns terminal processing status."""
     client = test_env["client"]
     file_payload = ("P_AND_ID_Unit4.pdf", io.BytesIO(b"P&ID content"), "application/pdf")
 
@@ -126,7 +127,7 @@ def test_get_document_status_returns_metadata(test_env):
 
     assert status_data["document_id"] == doc_id
     assert status_data["filename"] == "P_AND_ID_Unit4.pdf"
-    assert status_data["status"] == "processing"
+    assert status_data["status"] == "completed"
 
 
 def test_get_document_status_unknown_id_returns_404(test_env):
