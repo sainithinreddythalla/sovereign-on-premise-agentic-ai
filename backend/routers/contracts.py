@@ -52,7 +52,7 @@ def ai_generate(request: AIGenerateRequest) -> AIGenerateResponse:
 
         result = generate(ai_request)
 
-                return AIGenerateResponse(
+        return AIGenerateResponse(
             model=result.model,
             answer=result.answer,
             verification_status=result.verification_status,
