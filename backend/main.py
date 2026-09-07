@@ -10,9 +10,12 @@ from fastapi.responses import JSONResponse
 from backend.config import get_settings
 from backend.database import init_db
 from backend.errors import APIError, APIErrorDetail, APIErrorResponse
+
 # Import models to register with Base.metadata before database initialization
 import backend.models  # noqa: F401
 from backend.routers.documents import router as documents_router
+from backend.routers.tasks import router as tasks_router
+from backend.routers.contracts import router as contracts_router
 
 settings = get_settings()
 
@@ -76,6 +79,8 @@ async def handle_api_error(request: Request, exc: APIError) -> JSONResponse:
 # ============================================================================
 
 app.include_router(documents_router, prefix=settings.API_PREFIX)
+app.include_router(tasks_router, prefix=settings.API_PREFIX)
+app.include_router(contracts_router, prefix=settings.API_PREFIX)
 
 
 # ============================================================================
