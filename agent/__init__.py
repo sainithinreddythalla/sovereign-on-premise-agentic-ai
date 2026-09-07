@@ -23,6 +23,10 @@ from .schemas import (
     TaskPlan,
     VerificationReport,
 )
+from .service import (
+    AgentService,
+    execute_task,
+)
 
 __all__ = [
     "TaskStatus",
@@ -43,4 +47,6 @@ __all__ = [
     "PlanStep",
     "TaskPlan",
     "VerificationReport",
+    "AgentService",
+    "execute_task",
 ]
