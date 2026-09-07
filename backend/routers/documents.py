@@ -1,7 +1,7 @@
 """Documents API router conforming to Section 11.1 and 11.2 of PROJECT_SPEC.md."""
 
 from typing import List
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
@@ -12,6 +12,7 @@ from backend.schemas.document import (
     DocumentStatusResponse,
     DocumentUploadResponse,
 )
+from backend.services.document_processor import process_document
 from backend.services.storage import StorageService, get_storage_service
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
@@ -24,6 +25,7 @@ router = APIRouter(prefix="/documents", tags=["Documents"])
     summary="Upload confidential document",
 )
 def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     storage: StorageService = Depends(get_storage_service),
@@ -73,6 +75,14 @@ def upload_document(
     db.add(doc)
     db.commit()
     db.refresh(doc)
+
+    background_tasks.add_task(
+        process_document,
+        doc.document_id,
+        doc.storage_key,
+        storage,
+        db,
+    )
 
     return DocumentUploadResponse(
         document_id=doc.document_id,
