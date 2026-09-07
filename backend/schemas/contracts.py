@@ -76,6 +76,7 @@ class AIGenerateResponse(BaseModel):
     model: str
     answer: str
     verification_status: str = "requires_review"
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ReportGenerateRequest(BaseModel):

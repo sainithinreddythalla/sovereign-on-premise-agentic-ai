@@ -27,6 +27,11 @@ from .service import (
     AgentService,
     execute_task,
 )
+from .verification import (
+    EvidenceVerifier,
+    verify_finding,
+    verify_findings,
+)
 
 __all__ = [
     "TaskStatus",
@@ -49,4 +54,7 @@ __all__ = [
     "VerificationReport",
     "AgentService",
     "execute_task",
+    "EvidenceVerifier",
+    "verify_finding",
+    "verify_findings",
 ]

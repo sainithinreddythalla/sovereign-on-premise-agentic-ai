@@ -1,7 +1,10 @@
 from typing import Protocol
+
 from ai.config import AIConfig
 from ai.router import ModelRouter
 from ai.schemas import GenerationRequest, GenerationResponse, ModelInfo
+
+
 class AIProvider(Protocol):
     """Interface that every AI model provider must implement."""
 
@@ -52,4 +55,9 @@ class AIService:
             model=model.name,
             answer=answer,
             verification_status="requires_review",
+            metadata={
+                "generated_analysis": True,
+                "evidence_verified": False,
+                "verification_owner": "agent",
+            },
         )
