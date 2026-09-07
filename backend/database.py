@@ -4,7 +4,7 @@ Configured for local SQLite by default, environment-driven via backend.config.
 """
 
 from typing import Generator
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 from backend.config import get_settings
@@ -41,5 +41,28 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
-    """Create database tables registered with Base metadata."""
+    """Create fresh tables and migrate missing columns in existing SQLite databases."""
     Base.metadata.create_all(bind=engine)
+
+    if not settings.DATABASE_URL.startswith("sqlite"):
+        return
+
+    inspector = inspect(engine)
+    if "tasks" not in inspector.get_table_names():
+        return
+
+    existing_columns = {column["name"] for column in inspector.get_columns("tasks")}
+    migrations = {
+        "answer": "ALTER TABLE tasks ADD COLUMN answer TEXT",
+        "verification_status": "ALTER TABLE tasks ADD COLUMN verification_status VARCHAR(64)",
+        "evidence_coverage": "ALTER TABLE tasks ADD COLUMN evidence_coverage FLOAT",
+        "requires_human_review": "ALTER TABLE tasks ADD COLUMN requires_human_review INTEGER",
+        "sources": "ALTER TABLE tasks ADD COLUMN sources TEXT NOT NULL DEFAULT '[]'",
+        "findings": "ALTER TABLE tasks ADD COLUMN findings TEXT NOT NULL DEFAULT '[]'",
+        "report_id": "ALTER TABLE tasks ADD COLUMN report_id VARCHAR(64)",
+    }
+
+    with engine.begin() as connection:
+        for column_name, statement in migrations.items():
+            if column_name not in existing_columns:
+                connection.execute(text(statement))
