@@ -11,7 +11,7 @@ from xml.sax.saxutils import escape
 from backend.models.task import Task
 
 
-REPORT_DIR = Path(__file__).resolve().parent.parent / "reports"
+from backend.config import get_settings
 
 
 def _safe_filename(task_id: str) -> str:
@@ -154,10 +154,12 @@ def generate_report(db, task_id: str, report_format: str = "docx") -> tuple[str,
     else:
         paragraphs.append("No findings recorded.")
 
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    report_dir = Path(get_settings().DELIVERABLES_DIR)
+
+    report_dir.mkdir(parents=True, exist_ok=True)
 
     filename = _safe_filename(task_id)
-    output_path = REPORT_DIR / filename
+    output_path = report_dir / filename
     _write_docx(output_path, paragraphs)
 
     report_id = f"report_{uuid.uuid4().hex[:12]}"
