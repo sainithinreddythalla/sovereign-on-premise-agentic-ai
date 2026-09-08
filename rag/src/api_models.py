@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 
 class SearchResult(BaseModel):
@@ -14,6 +14,7 @@ class RAGSearchRequest(BaseModel):
     top_k: int = 5
 
 class RAGSearchResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     results: List[SearchResult]
 
 class DocumentChunk(BaseModel):

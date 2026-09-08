@@ -55,5 +55,19 @@ class TestServiceBoundary(unittest.TestCase):
         self.assertEqual(called_req.document_ids, ["doc1", "doc2"])
         self.assertEqual(called_req.top_k, 10)
 
+
+    @patch('rag.src.retriever.search_vector_store')
+    def test_search_service_boundary_validation(self, mock_search):
+        mock_search.return_value = []
+        req = MockBackendRequest(query="backend validation test")
+        res = search(req)
+        self.assertIsInstance(res, RAGSearchResponse)
+        self.assertEqual(len(res.results), 0)
+        try:
+            validated = RAGSearchResponse.model_validate(res)
+            self.assertIsInstance(validated, RAGSearchResponse)
+        except Exception as e:
+            self.fail(f"Double-validation type mismatch occurred: {e}")
+
 if __name__ == '__main__':
     unittest.main()
