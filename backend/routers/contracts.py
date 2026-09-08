@@ -27,6 +27,8 @@ def rag_search(request: RAGSearchRequest) -> RAGSearchResponse:
     """Delegate RAG search to the RAG service boundary."""
     try:
         result = _get_rag_search()(request)
+        if hasattr(result, "model_dump"):
+            result = result.model_dump()
         return RAGSearchResponse.model_validate(result)
     except Exception as exc:
         raise APIError(
