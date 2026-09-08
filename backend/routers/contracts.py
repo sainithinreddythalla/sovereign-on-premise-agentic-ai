@@ -3,6 +3,8 @@
 from fastapi import APIRouter
 
 from backend.errors import APIError
+from backend.database import SessionLocal
+from backend.services.report import generate_report as generate_report_service
 from backend.schemas.contracts import (
     AIGenerateRequest,
     AIGenerateResponse,
@@ -83,9 +85,44 @@ def ai_generate(request: AIGenerateRequest) -> AIGenerateResponse:
 def generate_report(
     request: ReportGenerateRequest,
 ) -> ReportGenerateResponse:
-    """Report generation is unavailable until a report service exists."""
-    raise APIError(
-        status_code=503,
-        code="REPORT_SERVICE_UNAVAILABLE",
-        message="Report generation service is not currently available.",
-    )
+    """Generate a local DOCX report from persisted task data."""
+    db = SessionLocal()
+
+    try:
+        report_id, filename = generate_report_service(
+            db=db,
+            task_id=request.task_id,
+            report_format=request.format,
+        )
+
+        return ReportGenerateResponse(
+            report_id=report_id,
+            task_id=request.task_id,
+            format=request.format,
+            filename=filename,
+        )
+
+    except LookupError as exc:
+        raise APIError(
+            status_code=404,
+            code="TASK_NOT_FOUND",
+            message=str(exc),
+        ) from exc
+
+    except ValueError as exc:
+        raise APIError(
+            status_code=400,
+            code="INVALID_REPORT_FORMAT",
+            message=str(exc),
+        ) from exc
+
+    except Exception as exc:
+        raise APIError(
+            status_code=503,
+            code="REPORT_SERVICE_UNAVAILABLE",
+            message="Report generation service is not currently available.",
+            details=str(exc),
+        ) from exc
+
+    finally:
+        db.close()
