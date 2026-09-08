@@ -1,25 +1,38 @@
 import json
 
+import pytest
+
 from ai.config import AIConfig
 from ai.providers.local import LocalProvider
 from ai.schemas import ModelInfo
 
 
 class FakeResponse:
+    def read(self):
+        return json.dumps(
+            {"response": "Hello from Ollama"}
+        ).encode("utf-8")
+
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         return False
 
-    def read(self):
-        return json.dumps({"answer": "Local model response"}).encode("utf-8")
-
 
 def test_local_provider_generates_with_mocked_http(monkeypatch):
     def fake_urlopen(request, timeout):
         assert request.method == "POST"
         assert timeout == 120
+
+        payload = json.loads(request.data.decode("utf-8"))
+
+        assert payload["model"] == "test-local-model"
+        assert payload["prompt"] == "Hello"
+        assert payload["stream"] is False
+        assert payload["options"]["temperature"] == 0.2
+        assert payload["options"]["num_predict"] == 2048
+
         return FakeResponse()
 
     monkeypatch.setattr(
@@ -38,16 +51,21 @@ def test_local_provider_generates_with_mocked_http(monkeypatch):
         ),
         prompt="Hello",
         context=[],
-        config=AIConfig(base_url="http://127.0.0.1:8000/generate"),
+        config=AIConfig(
+            base_url="http://127.0.0.1:11434/api/generate"
+        ),
     )
 
-    assert response == "Local model response"
+    assert response == "Hello from Ollama"
 
 
-def test_local_provider_fails_without_configuration():
+def test_local_provider_requires_base_url():
     provider = LocalProvider()
 
-    try:
+    with pytest.raises(
+        RuntimeError,
+        match="No local AI provider is configured.",
+    ):
         provider.generate(
             model=ModelInfo(
                 name="test-local-model",
@@ -59,7 +77,3 @@ def test_local_provider_fails_without_configuration():
             context=[],
             config=AIConfig(base_url=None),
         )
-    except RuntimeError as exc:
-        assert str(exc) == "No local AI provider is configured."
-    else:
-        raise AssertionError("Expected RuntimeError")

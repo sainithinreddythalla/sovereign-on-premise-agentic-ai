@@ -22,9 +22,11 @@ class LocalProvider:
         payload = {
             "model": model.name,
             "prompt": prompt,
-            "context": context,
-            "temperature": config.temperature,
-            "max_tokens": config.max_tokens,
+            "stream": False,
+            "options": {
+                "temperature": config.temperature,
+                "num_predict": config.max_tokens,
+            },
         }
 
         request = Request(
@@ -45,7 +47,7 @@ class LocalProvider:
                 f"Local AI provider request failed: {exc}"
             ) from exc
 
-        answer = result.get("answer")
+        answer = result.get("response")
 
         if not isinstance(answer, str):
             raise RuntimeError(
