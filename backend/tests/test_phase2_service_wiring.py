@@ -78,6 +78,29 @@ def test_rag_search_preserves_source_and_page_metadata(client):
     assert body["results"][0]["page"] == 7
 
 
+def test_rag_search_accepts_rag_pydantic_response(client):
+    from rag.src.api_models import RAGSearchResponse as RagRAGSearchResponse
+
+    rag_result = RagRAGSearchResponse(results=[])
+
+    with patch(
+        "backend.routers.contracts._get_rag_search"
+    ) as mock_search:
+        mock_search.return_value = lambda request: rag_result
+
+        response = client.post(
+            "/api/rag/search",
+            json={
+                "query": "empty retrieval",
+                "document_ids": [],
+                "top_k": 5,
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.json() == {"results": []}
+
+
 def test_ai_metadata_reaches_backend_response(client):
     mock_result = MagicMock()
     mock_result.model = "test-model"
