@@ -105,5 +105,5 @@ def test_report_generate_contract(client):
         },
     )
 
-    assert response.status_code == 503
-    assert response.json()["error"]["code"] == "REPORT_SERVICE_UNAVAILABLE"
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "TASK_NOT_FOUND"
