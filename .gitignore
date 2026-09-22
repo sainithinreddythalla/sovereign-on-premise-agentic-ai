@@ -6,3 +6,4 @@ venv/
 .env
 *.db
 data/
+frontend/.env.production

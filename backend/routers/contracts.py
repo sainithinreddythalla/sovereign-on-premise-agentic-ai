@@ -1,7 +1,12 @@
 """API contract endpoints for RAG, AI generation, and report generation."""
 
-from fastapi import APIRouter
+from pathlib import Path
 
+from fastapi import APIRouter
+from fastapi.responses import FileResponse
+
+from backend.config import get_settings
+from backend.models.task import Task
 from backend.errors import APIError
 from backend.database import SessionLocal
 from backend.services.report import generate_report as generate_report_service
@@ -123,6 +128,63 @@ def generate_report(
             message="Report generation service is not currently available.",
             details=str(exc),
         ) from exc
+
+    finally:
+        db.close()
+
+
+@router.get("/reports/{report_id}/download")
+def download_report(report_id: str):
+    """Download a previously generated local DOCX report."""
+    db = SessionLocal()
+
+    try:
+        task = db.query(Task).filter(Task.report_id == report_id).first()
+
+        if task is None:
+            raise APIError(
+                status_code=404,
+                code="REPORT_NOT_FOUND",
+                message="Report not found.",
+            )
+
+        report_dir = Path(get_settings().DELIVERABLES_DIR)
+
+        # Report filenames are generated as:
+        # <task_id>_<random8>.docx
+        safe_task_id = "".join(
+            character
+            if character.isalnum() or character in "_.-"
+            else "_"
+            for character in task.task_id
+        )
+
+        candidates = list(
+            report_dir.glob(f"{safe_task_id}_*.docx")
+        )
+
+        if not candidates:
+            raise APIError(
+                status_code=404,
+                code="REPORT_FILE_NOT_FOUND",
+                message="Generated report file was not found.",
+            )
+
+        # If multiple reports exist for the same task,
+        # return the most recently generated one.
+        report_path = max(
+            candidates,
+            key=lambda path: path.stat().st_mtime,
+        )
+
+        return FileResponse(
+            path=report_path,
+            media_type=(
+                "application/vnd.openxmlformats-officedocument."
+                "wordprocessingml.document"
+            ),
+            filename=report_path.name,
+        )
 
     finally:
         db.close()
